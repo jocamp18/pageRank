@@ -1,24 +1,38 @@
-#include <iostream>
-#include <sstream>
-#include <stdlib.h>
-#include <random>
-#include <vector>
-#include <map>
+#include <mpi.h>
 #include <stdio.h>
+#include <random>
+#include <iostream>
+#include <vector>
+
 using namespace std;
-int main(int argc, char **argv){
+
+int main(int argc, char** argv) {
+    // Initialize the MPI environment
+    MPI_Init(NULL, NULL);
+
+    // Get the number of processes
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+    if(world_rank == 0){
    int matrixLength = atoi(argv[1]);
-   double matrixDensity = atof(argv[2]);
-   //int matrix[5][5] = {{1,-1,0,-3,0},{-2,5,0,0,0},{0,0,4,6,4},{-4,0,2,7,0},{0,8,0,0,-5}};
-   double matrix[matrixLength][matrixLength];
-   double auxArray[matrixLength];
-   double val;
+    double matrixDensity = atof(argv[2]);
+    //int matrix[5][5] = {{1,-1,0,-3,0},{-2,5,0,0,0},{0,0,4,6,4},{-4,0,2,7,0},{0,8,0,0,-5}};
+    double matrix[matrixLength][matrixLength];
+    double auxArray[matrixLength];
+    double val;
    vector<float> values;
    vector<int> columns;
    vector<int> pointerB;
    vector<int> pointerE;
-   vector<float> r;
-   vector<float> m;
    srand(time(NULL));
    double  sum;
    for(int i = 0; i < matrixLength; i++){
@@ -66,20 +80,6 @@ int main(int argc, char **argv){
       }
       pointerE.push_back(pos);
    }
-   
-   
-   double probability = (double)(1.0 / (double)matrixLength);
-   for (int i = 0; i < matrixLength; i++) {
-      r.push_back(probability);
-      m.push_back(0.0);
-   }        
-   for (int i = 0; i < matrixLength; i++) {
-      for (int j = pointerB[i]; j < pointerE[i]; j++) {
-         m[i] += (values[j] * r[columns[j]]);
-   }          
-   cout << "m[" << i << "] = " << m[i] << endl;    
-   }
-   /*
    int cont1 = 0;
    for(int i = 0; i < pointerB.size();i++){
       int min = pointerB[i];
@@ -89,25 +89,16 @@ int main(int argc, char **argv){
       }
       cont1++;
    }
-   */
-   cout << "values: ";
+    cout << "values: ";
    for (double n : values){
       cout << n << ' ';
    }
-   cout << "columns: ";
-   for (int n : columns){
-      cout << n << ' ';
-   }
-   cout << "pointerB: ";
-   for (int n : pointerB){
-      cout << n << ' ';
-   }
-   
-   cout << "pointerB: ";
-   for (int n : pointerE){
-      cout << n << ' ';
-   }
-   
-   cout << "cont " << cont << endl;
-   return 0;
+    }
+    
+    
+    // Print off a hello world message
+    cout << "Hello from " << processor_name << " rank " << world_rank << " of " << world_size << endl;
+
+    // Finalize the MPI environment.
+    MPI_Finalize();
 }
