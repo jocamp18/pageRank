@@ -37,7 +37,6 @@ vector<double> multiply(int matrixLength){
    return auxR;
 }
 
-
 int main(int argc, char **argv){
    int matrixLength = atoi(argv[1]);
    double matrixDensity = atof(argv[2]);
@@ -46,9 +45,9 @@ int main(int argc, char **argv){
    double matrix[matrixLength][matrixLength];
    double auxArray[matrixLength];
    double val;
-   
    srand(time(NULL));
    double  sum;
+   
    for(int i = 0; i < matrixLength; i++){
       sum = 0;
       for(int j = 0; j < matrixLength; j++){
@@ -102,7 +101,6 @@ int main(int argc, char **argv){
       auxR.push_back(0.0);
       sub.push_back(0.0);
    }
-   
    vector<double>::iterator position;
    do{
       auxiliarR = r;
@@ -125,5 +123,25 @@ int main(int argc, char **argv){
       }
       cont1++;
    }*/
+  /* 
+   cout << "values: ";
+   for (double n : values){
+      cout << n << ' ';
+   }
+   cout << "columns: ";
+   for (int n : columns){
+      cout << n << ' ';
+   }
+   cout << "pointerB: ";
+   for (int n : pointerB){
+      cout << n << ' ';
+   }
+   
+   cout << "pointerB: ";
+   for (int n : pointerE){
+      cout << n << ' ';
+   }
+   
+   cout << "cont " << cont << endl;*/
    return 0;
 }
