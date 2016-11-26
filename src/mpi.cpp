@@ -9,6 +9,7 @@
 #include <map>
 #include <algorithm> 
 #include <string>
+#include <unistd.h>
 
 using namespace std;
 vector<int> myIntVector;
@@ -107,7 +108,7 @@ double** createMatrix(){
    return matrix;
 }
 
-void printMatrix(double** matrix){
+void printMatrix(double **matrix){
    for(int i = 0; i < matrixLength; i++){
       for(int j = 0; j < matrixLength; j++){
          cout << matrix[i][j] << " | ";
@@ -120,10 +121,12 @@ void initializeR(){
    double probability = (double)(1.0 / (double)matrixLength);
    for (int i = 0; i < matrixLength; i++) {
       r.push_back(probability);
+      auxiliarRMPI.push_back(0.0);
+      auxiliarR.push_back(0.0);
    }
 }
 
-void getCSRFormat(double** matrix){
+void getCSRFormat(double **matrix){
    int pos = 0, cont = 0;
    for(int i = 0; i < matrixLength; i++){
       pointerB.push_back(pos);
@@ -140,54 +143,91 @@ void getCSRFormat(double** matrix){
 }
 
 vector<double> substract(int matrixLength){
-   for(int i = 0; i < matrixLength; i++){
-      sub[i] = abs(r[i] - auxiliarR[i]);
-      //cout << "result " << sub[i] << endl;
+   vector<double> auxSub;
+   for(int i=0; i < matrixLength; i++){
+      auxSub.push_back(0.0);
    }
-   return sub;
+   for(int i = 0; i < matrixLength; i++){
+      //cout << " r: " << r[i] << endl;
+      //cout << " auxiliarR: " << auxiliarR[i] << endl;
+      auxSub[i] = abs(r[i] - auxiliarR[i]);
+   }
+   return auxSub;
 }
 
 int main(int argc, char** argv) {
    matrixLength = atoi(argv[1]);
+   //matrixLength = 6;
    matrixDensity = atof(argv[2]);
    tolerance = atof(argv[3]);
-   //double matrix[5][5] = {{1,-1,0,-3,0},{-2,5,0,0,0},{0,0,4,6,4},{-4,0,2,7,0},{0,8,0,0,-5}};
+   /*double matrix[6][6] = {{0.0,0.5,0.1,0.0,0.0,0.9},
+                          {0.2,0.0,0.7,0.0,0.0,0.1},
+                          {0.1,0.1,0.0,0.3,0.0,0.0},
+                          {0.4,0.1,0.2,0.0,0.0,0.0},
+                          {0.1,0.0,0.0,0.4,0.0,0.0},
+                          {0.2,0.3,0.0,0.3,1.0,0.0}};*/
    double** matrix = createMatrix();
    getCSRFormat(matrix);
    initializeR();
    initMPI(argc, argv);
-   double random = rand();
    if(world_rank == 0){
-      printMatrix(matrix);
-      //vector<double>::iterator position;
+      //printMatrix(matrix);
+      vector<double>::iterator position;
       vector<double> tmp;
       auxiliarRMPI.resize(matrixLength);
-      //do{
-         MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-         auxiliarR = auxiliarRMPI;
-         /*for(int i = 0; i < matrixLength; i++){
-            auxiliarR.push_back(auxiliarRMPI[i]);
-         }*/
-         MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      do{
          for(int i = 0; i < matrixLength; i++){
-            if(auxiliarRMPI[i] != 0){
-               auxiliarR[i] = auxiliarRMPI[i];
+            auxiliarR[i] = 0.0;
+         }
+         for(int i = 1; i < world_size; i++){
+            MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            //auxiliarR = auxiliarRMPI;
+            for(int j = 0; j < matrixLength; j++){
+               if(auxiliarRMPI[j] != 0){
+                  auxiliarR[j] = auxiliarRMPI[j];
+               }
             }
          }
          tmp = auxiliarR;
          auxiliarR = r;
+         
+         for(int i = 0; i < matrixLength; i++){
+            r[i] = 0.0;
+         }
          r = tmp;
-         //sub = substract(matrixLength);
-         //position = max_element(sub.begin(), sub.end());
-         //cout << "Tolerance: "<< tolerance << " Maximum: " << *position << endl;
-      //}while(tolerance < *position);
+         for(int i = 1; i < world_size; i++){
+            MPI_Send( &r[0], matrixLength, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+         }
+         sub = substract(matrixLength);
+         /*cout << "1: ";
+         for(double n: auxiliarR){
+            std::cout << n << std::endl;
+         }
+         cout << "2: ";
+         for(double n: r){
+            std::cout << n << std::endl;
+         }
+         cout << "3: ";
+         for(double n: sub){
+            std::cout << n << std::endl;
+         }
+         cout << "fin" << endl;*/
+         position = max_element(sub.begin(), sub.end());
+         cout << "Tolerance: "<< tolerance << " Maximum: " << *position << endl;
+      }while(tolerance < *position);
+      cout << "Vector r: " << endl;
+      for (double i : r) {
+         cout << i << " ";
+      }
+      cout << endl;
    }else{
-      cout << "Hello from " << processor_name << " rank " << world_rank << " of " << world_size 
-      << " value " << random << endl;
       int ini = initial(world_rank);
       int fin = final(world_rank);
-      auxiliarRMPI = multiply(ini,fin,world_rank);
-      MPI_Send( &auxiliarRMPI[0], matrixLength, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+      while(true){
+         auxiliarRMPI = multiply(ini,fin,world_rank);
+         MPI_Send( &auxiliarRMPI[0], matrixLength, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+         MPI_Recv(&r[0], matrixLength,  MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
     }
     // Finalize the MPI environment.
     MPI_Finalize();
