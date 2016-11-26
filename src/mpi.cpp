@@ -10,6 +10,7 @@
 #include <algorithm> 
 #include <string>
 #include <unistd.h>
+#include <time.h>
 
 using namespace std;
 vector<int> myIntVector;
@@ -156,20 +157,19 @@ vector<double> substract(int matrixLength){
 }
 
 int main(int argc, char** argv) {
+   
+   initMPI(argc, argv);
+   clock_t t1 = clock();
+   if(argc != 4){
+      cerr << "Error: Invalid arguments. " << endl;
+      exit(1);
+   }
    matrixLength = atoi(argv[1]);
-   //matrixLength = 6;
    matrixDensity = atof(argv[2]);
    tolerance = atof(argv[3]);
-   /*double matrix[6][6] = {{0.0,0.5,0.1,0.0,0.0,0.9},
-                          {0.2,0.0,0.7,0.0,0.0,0.1},
-                          {0.1,0.1,0.0,0.3,0.0,0.0},
-                          {0.4,0.1,0.2,0.0,0.0,0.0},
-                          {0.1,0.0,0.0,0.4,0.0,0.0},
-                          {0.2,0.3,0.0,0.3,1.0,0.0}};*/
    double** matrix = createMatrix();
    getCSRFormat(matrix);
    initializeR();
-   initMPI(argc, argv);
    if(world_rank == 0){
       //printMatrix(matrix);
       vector<double>::iterator position;
@@ -199,19 +199,6 @@ int main(int argc, char** argv) {
             MPI_Send( &r[0], matrixLength, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
          }
          sub = substract(matrixLength);
-         /*cout << "1: ";
-         for(double n: auxiliarR){
-            std::cout << n << std::endl;
-         }
-         cout << "2: ";
-         for(double n: r){
-            std::cout << n << std::endl;
-         }
-         cout << "3: ";
-         for(double n: sub){
-            std::cout << n << std::endl;
-         }
-         cout << "fin" << endl;*/
          position = max_element(sub.begin(), sub.end());
          cout << "Tolerance: "<< tolerance << " Maximum: " << *position << endl;
       }while(tolerance < *position);
@@ -220,6 +207,11 @@ int main(int argc, char** argv) {
          cout << i << " ";
       }
       cout << endl;
+      r.resize(0);
+      for(int i = 1; i < world_size; i++){
+         MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+         MPI_Send( &r[0], matrixLength, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+      }
    }else{
       int ini = initial(world_rank);
       int fin = final(world_rank);
@@ -228,7 +220,11 @@ int main(int argc, char** argv) {
          MPI_Send( &auxiliarRMPI[0], matrixLength, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
          MPI_Recv(&r[0], matrixLength,  MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
-    }
-    // Finalize the MPI environment.
-    MPI_Finalize();
+   }
+   // Finalize the MPI environment.
+   clock_t t2 = clock();
+   double diff = (double)t2 - (double)t1;
+   double seconds = diff/CLOCKS_PER_SEC;
+   cout << "Time: " << seconds <<"seconds" << endl;
+   MPI_Finalize();
 }

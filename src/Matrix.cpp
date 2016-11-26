@@ -7,7 +7,10 @@
 #include <stdio.h>
 #include <algorithm> 
 #include <string>
+#include <time.h>
+
 using namespace std;
+
 vector<float> values;
 vector<int> columns;
 vector<int> pointerB;
@@ -39,6 +42,11 @@ vector<double> multiply(int matrixLength){
 
 
 int main(int argc, char **argv){
+   clock_t t1 = clock();
+   if(argc != 4){
+      cerr << "Error: Invalid arguments. " << endl;
+      exit(1);
+   }
    int matrixLength = atoi(argv[1]);
    double matrixDensity = atof(argv[2]);
    double tolerance = atof(argv[3]);
@@ -113,8 +121,12 @@ int main(int argc, char **argv){
    }while(tolerance < *position);
    cout << "r vector: " << endl;
    for(double n: r){
-      cout << n << endl;
+      cout << n << " ";
    }
+   clock_t t2 = clock();
+   double diff = (double)t2 - (double)t1;
+   double seconds = diff/CLOCKS_PER_SEC;
+   cout << "Time: " << seconds <<"seconds" << endl;
   /* 
    int cont1 = 0;
    for(int i = 0; i < pointerB.size();i++){
