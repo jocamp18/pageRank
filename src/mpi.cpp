@@ -146,15 +146,12 @@ vector<double> substract(int matrixLength){
       auxSub.push_back(0.0);
    }
    for(int i = 0; i < matrixLength; i++){
-      //cout << " r: " << r[i] << endl;
-      //cout << " auxiliarR: " << auxiliarR[i] << endl;
       auxSub[i] = abs(r[i] - auxiliarR[i]);
    }
    return auxSub;
 }
 
 int main(int argc, char** argv) {
-   
    initMPI(argc, argv);
    clock_t t1 = clock();
    if(argc != 4){
@@ -170,6 +167,7 @@ int main(int argc, char** argv) {
       matrix[i] = new double[matrixLength];
    }
    matrix = createMatrix();
+   cout << "Matrix finished" << endl;
    getCSRFormat(matrix);
    initializeR();
    if(world_rank == 0){
@@ -183,7 +181,6 @@ int main(int argc, char** argv) {
          }
          for(int i = 1; i < world_size; i++){
             MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            //auxiliarR = auxiliarRMPI;
             for(int j = 0; j < matrixLength; j++){
                if(auxiliarRMPI[j] != 0){
                   auxiliarR[j] = auxiliarRMPI[j];
@@ -209,11 +206,6 @@ int main(int argc, char** argv) {
          cout << i << " ";
       }
       cout << endl;
-      r.resize(0);
-      for(int i = 1; i < world_size; i++){
-         MPI_Recv(&auxiliarRMPI[0], matrixLength,  MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-         MPI_Send( &r[0], matrixLength, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
-      }
    }else{
       int ini = initial(world_rank);
       int fin = final(world_rank);
@@ -227,6 +219,6 @@ int main(int argc, char** argv) {
    clock_t t2 = clock();
    double diff = (double)t2 - (double)t1;
    double seconds = diff/CLOCKS_PER_SEC;
-   cout << "Time: " << seconds <<"seconds" << endl;
+   cout << "Time: " << seconds <<" seconds" << endl;
    MPI_Finalize();
 }
