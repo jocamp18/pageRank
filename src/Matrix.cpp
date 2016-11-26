@@ -50,7 +50,8 @@ int main(int argc, char **argv){
    int matrixLength = atoi(argv[1]);
    double matrixDensity = atof(argv[2]);
    double tolerance = atof(argv[3]);
-   //double matrix[3][3] = {{0,0.5,1},{0.3,0,0},{0.7,0.5}};
+   //double matrix[3][3] = {{3.0,4.5,1},{0.3,0,0},{0.7,0.5, 1}};
+   //double matrix[5][5] = {{1,-1,0,-3,0},{-2,5,0,0,0},{0,0,4,6,4},{-4,0,2,7,0},{1,8,0,0,-5}};
    double matrix[matrixLength][matrixLength];
    double auxArray[matrixLength];
    double val;
@@ -82,14 +83,12 @@ int main(int argc, char **argv){
          }
       }
    }
-  /* 
-   for(int i = 0; i < matrixLength; i++){
+   /*for(int i = 0; i < matrixLength; i++){
       for(int j = 0; j < matrixLength; j++){
          cout << matrix[i][j] << " | ";
       }
       cout << endl;
-   }
-   */
+   }*/
    int pos = 0, cont = 0;
    for(int i = 0; i < matrixLength; i++){
       pointerB.push_back(pos);
@@ -123,19 +122,10 @@ int main(int argc, char **argv){
    for(double n: r){
       cout << n << " ";
    }
+   cout << endl;
    clock_t t2 = clock();
    double diff = (double)t2 - (double)t1;
    double seconds = diff/CLOCKS_PER_SEC;
    cout << "Time: " << seconds <<"seconds" << endl;
-  /* 
-   int cont1 = 0;
-   for(int i = 0; i < pointerB.size();i++){
-      int min = pointerB[i];
-      int max = pointerE[i];
-      for(int j = min; j < max;j++){
-         cout << "cont " << cont1 << " send " << values[j] << endl;
-      }
-      cont1++;
-   }*/
    return 0;
 }

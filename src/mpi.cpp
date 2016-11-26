@@ -97,9 +97,6 @@ double** createMatrix(){
       }
       //cout << sum << endl;
       auxArray[i] = sum;
-   }
-   
-   for(int i = 0; i < matrixLength; i++){
       for(int j = 0; j < matrixLength; j++){
          if(matrix[j][i] != 0){
             matrix[j][i] = matrix[j][i]/auxArray[i];
@@ -167,7 +164,12 @@ int main(int argc, char** argv) {
    matrixLength = atoi(argv[1]);
    matrixDensity = atof(argv[2]);
    tolerance = atof(argv[3]);
-   double** matrix = createMatrix();
+   double** matrix;
+   matrix = new double*[matrixLength];
+   for(int i = 0; i < matrixLength; i++){
+      matrix[i] = new double[matrixLength];
+   }
+   matrix = createMatrix();
    getCSRFormat(matrix);
    initializeR();
    if(world_rank == 0){
